@@ -1,7 +1,7 @@
 # dscapp
 Repository for the files for the Spring 2015 Coursera Data Science Specialisation Capstone Project. Contains an application that uses n-gram (4-gram, 3-gram, 2-gram) tables constructed from a corpus to predict the next word in the phrase.
 
-Source corpus available at https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip .
+Source corpus available at https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip.
 
 **Folders**
 * dscapp  
