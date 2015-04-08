@@ -1,0 +1,205 @@
+####Milestone Report
+####Capstone Project of Coursera Data Science Specialisation
+####Spring 2015 Edition 
+####Author: Iga Korneta
+
+**Executive Summary**: This report details the results of my exploratory analysis of the corpus of English-language files used in the Capstone project. **For the sake of clarity, the code for the more calculation-intensive parts of the processing / report is listed below the main text.**
+
+
+**File sizes, word counts, line counts**: The corpus contains three plaintext files. The following table contains basic information about the files in the corpus:
+
+File Name|File Size|Word Count|Line Count
+---------|---------|----------|----------
+en_US.blogs.txt|200MB|37,214,743|899288
+en_US.news.txt|196MB|2,634,910|77259
+en_US.twitter.txt|159MB|29,763,605|2360148
+---------|---------|----------|----------
+**Sum**||69,613,258|
+
+
+**Sampling the data**: Due to size of the corpus, the fact that I'm doing the project on a shitty laptop; as well as the fact that, as per Task 1 description, this is allowed - for the rest of the analysis (calculating the term frequencies and n-grams), for the sake of this analysis, I decided to work on a random sample of 5% of the data.
+
+
+**Cleaning the data sample**: Subsequently, I decided to clean the sample using some basic clean-up operations: - convert uppercase to lowercase; - remove numbers and punctuation; - stem the words, i.e. remove conjugation/declension suffixes; - remove stopwords, i.e. the most common words (usually conjunctions, pronouns, modal verbs etc.; the list of stopwords is available in R with the command *stopwords("SMART")*).
+
+
+**Word frequencies**: At this point, I decided to calculate the word frequencies in the sample. There were 120,339 words in the sample, out of which 49,659 appeared more than once. After removing the sparse words (those appearing only once), in order to achieve 50% coverage of all word instances, 1145 words were needed; in order to achieve 90% coverage, 14160 words were needed.
+
+The most popular terms and other summaries are listed below:
+
+```{r termfreq1, echo=TRUE, eval=TRUE, message=FALSE}
+library(ggplot2)
+library(NLP)
+library(tm)
+library(RColorBrewer)
+library(wordcloud)
+
+freq.data.frame <- read.csv("./data/corpsample_cleaned_nostopwords_termfreq.txt")
+ord.freq.data.frame <- freq.data.frame[order(freq.data.frame$freq, decreasing=TRUE),]
+```
+
+Most popular **non-stop** words in the cleaned sample:
+```{r termfreq2, echo=TRUE, eval=TRUE, message=FALSE}
+head(ord.freq.data.frame, n=10)
+```
+
+Wordcloud of the most popular words:
+```{r termfreq3, echo=TRUE, eval=TRUE, fig.align='center', fig.height=4, message=FALSE}
+wordcloud(freq.data.frame$X, freq.data.frame$freq, max.words=100, scale=c(1.5, .5), colors=brewer.pal(5, "Dark2"))
+```
+
+Histogram of the number of words appearing at a given count (warning: log scale on the Y-axis):
+```{r termfreq4, echo=TRUE, eval=TRUE, fig.align='center', fig.height=4, message=FALSE}
+temp <- freq.data.frame[freq.data.frame$freq>1,]
+p <- ggplot(temp, aes(freq))
+p <- p + geom_histogram(binwidth=200, fill="pink", colour="white")
+p <- p + scale_y_log10() + annotation_logticks(sides="l")
+p <- p + ylab("Number of terms") +  xlab("Frequency of term in 5% sample of the corpus")
+p
+```
+
+**2- and 3-grams**: Finally, as per the Task 2 description, I decided to find out the frequencies of 2- and 3-grams in the sample. The sample contained 1,135,347 distinct 2-grams and 2,315,421 distinct 3-grams, out of which 254,669 2-grams and 229,282 3-grams appeared more than once. 8,223 2-grams were needed to obtain 50% coverage of all 2-grams appearing more than once, while 33,365 3-grams were needed to obtain 50% coverage.
+
+The most popular 2- and 3-grams are composed exclusively of stop words.
+
+```{r ngram1, echo=TRUE, eval=TRUE, message=FALSE}
+freq2.data.frame <- read.csv("./data/corpsample_cleaned_withstopwords_termfreq_2grams.txt")
+ord.freq2.data.frame <- freq2.data.frame[order(freq2.data.frame$freq, decreasing=TRUE),]
+freq3.data.frame <- read.csv("./data/corpsample_cleaned_withstopwords_termfreq_3grams.txt")
+ord.freq3.data.frame <- freq3.data.frame[order(freq3.data.frame$freq, decreasing=TRUE),]
+```
+
+The most popular 2-grams were as follows:
+```{r ngram2, echo=TRUE, eval=TRUE, message=FALSE}
+head(ord.freq2.data.frame, n=10)
+```
+
+Wordcloud of the most popular 2-grams:
+```{r ngram3, echo=TRUE, eval=TRUE, fig.align='center', fig.height=6, message=FALSE}
+wordcloud(freq2.data.frame$X, freq2.data.frame$freq, max.words=100, scale=c(1.5, .5), colors=brewer.pal(5, "Dark2"))
+```
+
+Histogram of the number of 2-grams appearing at a given count (warning: log scale on the Y-axis):
+```{r ngram4, echo=TRUE, eval=TRUE, fig.align='center', fig.height=4, message=FALSE}
+temp <- freq2.data.frame[freq2.data.frame$freq>1,]
+p <- ggplot(temp, aes(freq))
+p <- p + geom_histogram(binwidth=200, fill="pink", colour="white")
+p <- p + scale_y_log10() + annotation_logticks(sides="l")
+p <- p + ylab("Number of 2-grams") +  xlab("Frequency of 2-gram in 5% sample of the corpus")
+p
+```
+
+The most popular 3-grams were as follows:
+```{r ngram5, echo=TRUE, eval=TRUE, message=FALSE}
+head(ord.freq3.data.frame, n=10)
+```
+
+Wordcloud of the most popular 3-grams:
+```{r ngram6, echo=TRUE, eval=TRUE, fig.align='center', fig.height=4, message=FALSE}
+wordcloud(freq3.data.frame$X, freq3.data.frame$freq, max.words=100, scale=c(1.5, .5), colors=brewer.pal(5, "Dark2"))
+```
+
+Histogram of the number of 3-grams appearing at a given count (warning: log scale on the Y-axis):
+```{r ngram7, echo=TRUE, eval=TRUE, fig.align='center', fig.height=4, message=FALSE}
+temp <- freq3.data.frame[freq3.data.frame$freq>1,]
+p <- ggplot(temp, aes(freq))
+p <- p + geom_histogram(binwidth=50, fill="pink", colour="white")
+p <- p + scale_y_log10() + annotation_logticks(sides="l")
+p <- p + ylab("Number of 3-grams") +  xlab("Frequency of 3-gram in 5% sample of the corpus")
+p
+```
+
+
+**Conclusion:**
+The results of this phase of my exploratory analysis indicate that the English language is very power-law-like: i.e. there are a few words that are ubiquitous, and a lot that are very sparsely used. The ubiquitous are so ubiquitous that it should be hard to predict the word following the previous one, because there are so many possibilities, while the sparse are difficult to predict because there are so few possibilities. Hence, attention should be focused on the "happy middle" - words present in the language in relatively fixed associations / compounds / fixed phrases.
+
+
+**Code**:
+Word and line counts:
+```{r readfile, echo=TRUE, eval=FALSE}
+library(qdap)
+cname <- "./data/"
+docs <- Corpus(DirSource(cname)) #doc1 is blogs, doc2 is news, doc3 is twitter
+
+length(content(docs[[1]])) #line count of blogs
+word_count(content(docs[[1]]), digit.remove=FALSE, byrow=FALSE) #word count of blogs
+content(docs[[1]])[1:5] #first five lines of blogs
+```
+
+Sampling:
+```{r sample, echo=TRUE, eval=FALSE}
+set.seed(123)
+binom <- rbinom(899288+77259+2360148, 1, 0.05)
+corpsample <- c(content(docs[[1]])[binom[1:899288]==1], content(docs[[2]])[binom[899289:976547]==1], content(docs[[3]])[binom[976548:3336695]==1])
+
+con <- file("./data/corpsample.txt", open="wt")
+writeLines(corpsample, con)
+close(con)
+
+rm(list=ls())
+```
+
+Cleaning the data sample for term frequency calculations:
+```{r cleanup1, echo=TRUE, eval=FALSE}
+corpsample <- PlainTextDocument(readLines("./data/corpsample.txt"))
+corpsample <- tolower(corpsample)
+corpsample <- removeNumbers(corpsample)
+corpsample <- removePunctuation(corpsample)
+corpsample <- gsub("[â€™œ˜”“‚‘]","", corpsample)
+corpsample <- stemDocument(corpsample)
+corpsample <- removeWords(corpsample, stopwords("SMART")) #cleaning for n-grams is identical with the exclusion of this one line
+corpsample <- stripWhitespace(corpsample)
+
+con <- file("./data/corpsample_cleaned_nostopwords.txt", open="wt")
+writeLines(corpsample, con)
+close(con)
+```
+
+Term frequency calculations:
+```{r termfreqcalc, echo=TRUE, eval=FALSE}
+corpsample <- PlainTextDocument(readLines("./data/corpsample_cleaned_nostopwords.txt"))
+freq <- termFreq(corpsample)
+freq.data.frame <- as.data.frame(freq)
+write.csv(freq.data.frame,"./data/corpsample_cleaned_nostopwords_termfreq.txt")
+```
+
+Term frequency summaries:
+```{r termfreqsum, echo=TRUE, eval=FALSE}
+freq.data.frame <- read.csv("./data/corpsample_cleaned_nostopwords_termfreq.txt")
+ord.freq.data.frame <- freq.data.frame[order(freq.data.frame$freq, decreasing=TRUE),]
+
+dim(freq.data.frame)[1]
+nrow(freq.data.frame[freq.data.frame$freq>1,])
+
+#coverage calculations begin below
+df <- as.data.frame(table(freq.data.frame[freq.data.frame$freq>1,]$freq))
+totinst <- sum(as.numeric(as.character(df[,1]))*df[,2])
+csum <- 0
+a50 <- 0
+a90 <- 0
+
+for (i in dim(df)[1]:1){
+  csum= csum + as.numeric(as.character(df[i,1]))*df[i,2] 
+  if ((csum/totinst > 0.5) & a50==0) {a50 <- i}
+  if ((csum/totinst > 0.9) & a90==0) {a90 <- i} 
+  }
+sum(df[a50:dim(df)[1],2])
+sum(df[a90:dim(df)[1],2])
+```
+
+2- and 3-gram calculations:
+```{r ngramcalc, echo=TRUE, eval=FALSE}
+library("RWeka")
+corpsample <- PlainTextDocument(readLines("./data/corpsample_cleaned_withstopwords.txt"))
+BigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 2, max = 2))
+freq2 <- termFreq(corpsample, control = list(tokenize = BigramTokenizer))
+freq2.data.frame <- as.data.frame(freq2)
+write.csv(freq2.data.frame,"./data/corpsample_cleaned_withstopwords_termfreq_2grams.txt")
+
+TrigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 3, max = 3))
+freq3 <- termFreq(corpsample, control = list(tokenize = TrigramTokenizer))
+freq3.data.frame <- as.data.frame(freq3)
+write.csv(freq3.data.frame,"./data/corpsample_cleaned_withstopwords_termfreq_3grams.txt")
+```
+
+N-gram frequency summary calculations are identical to the 1-gram (term/word) summary calculations.
